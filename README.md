@@ -18,7 +18,7 @@
 
 ## Usage
 - install JDK:  
-`sudo apt install openjdk-17-jdk**`
+`sudo apt install openjdk-17-jdk`
 - run with:  
 `java -jar mapsforge-theme-editor.jar`
 - Create empty project, open existing project or create a project from existing theme.
