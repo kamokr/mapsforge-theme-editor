@@ -3,6 +3,7 @@
 # Mapsforge Theme Editor
 
 - [Features](#features)
+- [Usage](#usage)
 - [License](#license)
 - [Screenshots](#screenshots)
   
@@ -16,7 +17,6 @@
 - Add comment to describe rule or draw instruction.
 
 ## Usage
-
 - install JDK:  
 `sudo apt install openjdk-17-jdk**`
 - run with:  
