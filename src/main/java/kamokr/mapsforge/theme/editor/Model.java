@@ -94,9 +94,14 @@ public class Model {
             this.schema = schema;
             this.meta = schema.get(element.getName());
 
-            meta.attributes.forEach((name, meta) -> {
+            if(this.meta == null) {
+                logger.severe("Element " + element.getName() + " not found in schema");
+                return;
+            }
+
+            meta.attributes.forEach((name, attrMeta) -> {
                 String value = element.getAttributeValue(name);
-                attributes.put(name, new AttributeBinding(element, meta));
+                attributes.put(name, new AttributeBinding(element, attrMeta));
             });
 
             element.getChildren().forEach((child) -> {
@@ -249,6 +254,18 @@ public class Model {
         this.document = builder.build(xmlFile);
         this.projectXmlFile = xmlFile;
         this.themeXmlFile = new File(xmlFile.getParentFile(), "theme.xml");
+        this.root = new ElementBinding(null, this.document.getRootElement(), schema);
+    }
+
+    public void loadTheme(File themeXmlFile, File mapFile) throws IOException, JDOMException {
+        SAXBuilder builder = new SAXBuilder();
+        this.document = builder.build(themeXmlFile);
+
+        Element rootElement = this.document.getRootElement();
+        rootElement.setAttribute("editor-map", mapFile.getAbsolutePath());
+
+        this.projectXmlFile = new File(themeXmlFile.getParentFile(), "editor.project");
+        this.themeXmlFile = new File(themeXmlFile.getParentFile(), "theme.xml");;
         this.root = new ElementBinding(null, this.document.getRootElement(), schema);
     }
 

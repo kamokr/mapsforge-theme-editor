@@ -20,6 +20,7 @@ public class StartupDialog extends JDialog {
 
     public class StartupDialogResult {
         public File projectFile = null;
+        public File themeFile = null;
         public File mapFile = null;
         public String projectName = null;
         public boolean createNewProject = false;
@@ -59,12 +60,15 @@ public class StartupDialog extends JDialog {
 
         JButton newProjectBtn = new JButton("New Project");
         JButton openProjectBtn = new JButton("Open Project");
+        JButton openThemeBtn = new JButton("Open Theme");
 
         newProjectBtn.addActionListener(this::createNewProject);
         openProjectBtn.addActionListener(this::openProject);
+        openThemeBtn.addActionListener(this::openTheme);
 
         headerPanel.add(newProjectBtn);
         headerPanel.add(openProjectBtn);
+        headerPanel.add(openThemeBtn);
 
         return headerPanel;
     }
@@ -128,12 +132,35 @@ public class StartupDialog extends JDialog {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter("Theme Editor Project (*.project)", "project"));
         fileChooser.setDialogTitle("Open Project");
-//        fileChooser.setCurrentDirectory(new File(settings.getProjectsDir()));
 
         int fileChooserResult = fileChooser.showOpenDialog(this);
         if (fileChooserResult == JFileChooser.APPROVE_OPTION) {
             result = new StartupDialogResult();
             result.projectFile = fileChooser.getSelectedFile();
+
+            // Add to recent projects
+            Settings.RecentProjectInfo recentProjectInfo = new Settings.RecentProjectInfo();
+            String projectName = result.projectFile.getParentFile().getName();
+            recentProjectInfo.setName(projectName);
+            recentProjectInfo.setDir(result.projectFile.getParent());
+            settings.addRecentProjectInfo(recentProjectInfo);
+
+            saveSettings();
+            dispose();
+        }
+    }
+
+    private void openTheme(ActionEvent e) {
+        StartupLoadThemeDialog loadThemeDialog = new StartupLoadThemeDialog((Frame) getParent(), settings);
+        loadThemeDialog.setVisible(true);
+
+        StartupLoadThemeDialog.LoadThemeDialogResult dialogResult = loadThemeDialog.getResult();
+
+        if (dialogResult != null) {
+            result = new StartupDialogResult();
+            result.themeFile = dialogResult.themeFile;
+            result.projectFile = new File(result.themeFile.getParentFile(), "editor.project");
+            result.mapFile = dialogResult.mapFile;
 
             // Add to recent projects
             Settings.RecentProjectInfo recentProjectInfo = new Settings.RecentProjectInfo();

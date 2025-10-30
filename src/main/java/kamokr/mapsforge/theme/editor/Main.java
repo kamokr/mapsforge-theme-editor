@@ -79,6 +79,24 @@ public class Main extends JFrame implements Editor.EditorChangeListener {
         StartupDialog.StartupDialogResult result = startupDialog.getResult();
         if (result == null) return false;
 
+        // open existing theme
+        if(result.themeFile != null) {
+            try {
+                editor.loadTheme(result.themeFile, result.mapFile);
+                mapView.openMap(editor.getMapFile());
+                applyTheme();
+                return true;
+            } catch (Exception e) {
+                logger.severe("Error loading theme: " + e.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Error loading theme: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
+        // create new project
         if (result.createNewProject) {
             try {
                 editor.createProject(result.projectFile, result.mapFile);

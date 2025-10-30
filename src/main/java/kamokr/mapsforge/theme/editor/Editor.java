@@ -405,6 +405,13 @@ public class Editor extends JPanel implements EditorAttributesPanel.ChangeListen
         model.saveTheme();
     }
 
+    public void loadTheme(File themeFile, File mapFile) throws IOException, JDOMException {
+        model.loadTheme(themeFile, mapFile);
+        model.saveProject();
+        model.saveTheme();
+        rebuildTree();
+    }
+
     /**
      * Saves both project XML and theme XML files
      *
