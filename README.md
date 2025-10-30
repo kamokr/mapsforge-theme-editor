@@ -36,3 +36,4 @@ In other words, you are allowed to include Mapsforge Theme Editor in your applic
 ## Screenshots
 
 <img src="docs/screenshot.png" alt="Mapsforge Theme Editor Screenshot"/>
+<img src="docs/screenshot2.png" alt="Mapsforge Theme Editor Screenshot"/>
