@@ -15,6 +15,16 @@
 - Drag and drop, change order, enable/disable rules and draw instructions.
 - Add comment to describe rule or draw instruction.
 
+## Usage
+
+- install JDK:  
+`sudo apt install openjdk-17-jdk**`
+- run with:  
+`java -jar mapsforge-theme-editor.jar`
+- Create empty project, open existing project or create a project from existing theme.
+
+Existing theme files will not be overwritten, editor will create a new theme.xml file in the same directory.
+
 ## License
 
 Mapsforge Theme Editor is under [LGPL v3 license](http://www.gnu.org/licenses/lgpl-3.0), with an important simplification: the constraints mentioned in sections LGPL v3 §4(d) and §4(e) are waived.
