@@ -9,9 +9,11 @@
 ## Features
 - Visual editor for Mapsforge RenderTheme XML files.
 - Live preview of the theme on a map.
-- Support for various Mapsforge features including ~~styles~~, rules, and symbol definitions.
-- Export themes to XML format compatible with Mapsforge.
+- Support for various Mapsforge features including styles, rules, and symbol definitions.
+- Auto-saving theme in Mapsforge XML format.
 - User-friendly interface for easy theme creation and modification.
+- Drag and drop, change order, enable/disable rules and draw instructions.
+- Add comment to describe rule or draw instruction.
 
 ## License
 
