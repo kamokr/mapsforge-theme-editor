@@ -1,4 +1,4 @@
-package pl.lanteq.mapsforge.theme.editor.ui;
+package kamokr.mapsforge.theme.editor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,24 +28,21 @@ import org.mapsforge.map.layer.cache.TileCache;
 import org.mapsforge.map.layer.renderer.TileRendererLayer;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.*;
-import org.mapsforge.map.awt.view.MapView;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleLayer;
 import org.mapsforge.map.rendertheme.XmlRenderThemeStyleMenu;
 import org.mapsforge.map.rendertheme.ExternalRenderTheme;
 
-import pl.lanteq.mapsforge.theme.editor.model.RenderTheme;
 
-
-public class MapPreviewPanel extends JPanel implements XmlRenderThemeMenuCallback {
+public class MapView extends JPanel implements XmlRenderThemeMenuCallback {
     private static final GraphicFactory GRAPHIC_FACTORY = AwtGraphicFactory.INSTANCE;
-    private MapView mapView;
+    private org.mapsforge.map.awt.view.MapView mapView;
     private TileRendererLayer tileRendererLayer;
     private MapDataStore mapDataStore;
     private MapDataPanel mapDataPanel;
     private JLabel statusLabel;
     private JLabel zoomLabel;
 
-    public MapPreviewPanel() {
+    public MapView() {
         initializeUI();
     }
 
@@ -53,7 +50,7 @@ public class MapPreviewPanel extends JPanel implements XmlRenderThemeMenuCallbac
         setLayout(new BorderLayout());
 
         // Initialize MapView
-        mapView = new MapView();
+        mapView = new org.mapsforge.map.awt.view.MapView();
 
         add(mapView, BorderLayout.CENTER);
 
@@ -91,9 +88,7 @@ public class MapPreviewPanel extends JPanel implements XmlRenderThemeMenuCallbac
         return result;
     }
 
-    public void openMap(String path) throws FileNotFoundException {
-        File mapFile = new File(path);
-
+    public void openMap(File mapFile) throws FileNotFoundException {
         TileCache tileCache = AwtUtil.createTileCache(
 //                mapView.getModel().displayModel.getTileSize(),
                 256,
@@ -112,7 +107,7 @@ public class MapPreviewPanel extends JPanel implements XmlRenderThemeMenuCallbac
                 tileCache,
                 mapDataStore,
                 mapView.getModel().mapViewPosition,
-                MapPreviewPanel.GRAPHIC_FACTORY);
+                MapView.GRAPHIC_FACTORY);
 
 
 
@@ -133,14 +128,11 @@ public class MapPreviewPanel extends JPanel implements XmlRenderThemeMenuCallbac
         });
     }
 
-    public void applyTheme(String themePath) {
+    public void applyTheme(File themeFile) {
         tileRendererLayer.getTileCache().purge();
         try {
-            File themeFile = new File(themePath);
             XmlRenderTheme renderTheme = new ExternalRenderTheme(themeFile);
-//        XmlRenderTheme renderTheme = MapsforgeThemes.MOTORIDER;
             tileRendererLayer.setXmlRenderTheme(renderTheme);
-
             mapView.getLayerManager().redrawLayers();
             statusLabel.setText("Theme applied");
 

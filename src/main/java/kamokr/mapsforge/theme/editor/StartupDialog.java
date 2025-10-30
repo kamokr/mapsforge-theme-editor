@@ -1,10 +1,6 @@
-package pl.lanteq.mapsforge.theme.editor.ui;
-
-import pl.lanteq.mapsforge.theme.editor.model.EditorProject;
-import pl.lanteq.mapsforge.theme.editor.model.EditorSettings;
+package kamokr.mapsforge.theme.editor;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -14,14 +10,20 @@ import java.io.File;
 import java.util.List;
 
 public class StartupDialog extends JDialog {
-    private static final String SETTINGS_FILE = "mapsforge-theme-editor-settings.xml";
-    private static final String PROJECT_FILE = "editor.project";
+    private static final String SETTINGS_FILENAME = "mapsforge-theme-editor-settings.xml";
+    private static final String PROJECT_FILENAME = "editor.project";
 
-    private EditorSettings editorSettings;
-    private JList<EditorProject> recentProjectsList;
-    private DefaultListModel<EditorProject> listModel;
-    private String selectedProjectPath = null;
-    private boolean createNewProject = false;
+    private Settings settings;
+    private JList<Settings.RecentProjectInfo> recentProjectsList;
+    private DefaultListModel<Settings.RecentProjectInfo> recentProjectListModel;
+    private StartupDialogResult result = null;
+
+    public class StartupDialogResult {
+        public File projectFile = null;
+        public File mapFile = null;
+        public String projectName = null;
+        public boolean createNewProject = false;
+    }
 
     public StartupDialog(Frame parent) {
         super(parent, "Mapsforge Theme Editor", true);
@@ -74,8 +76,8 @@ public class StartupDialog extends JDialog {
                         BorderFactory.createEmptyBorder(),
                         "Recent Projects"));
 
-        listModel = new DefaultListModel<>();
-        recentProjectsList = new JList<>(listModel);
+        recentProjectListModel = new DefaultListModel<>();
+        recentProjectsList = new JList<>(recentProjectListModel);
         recentProjectsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         recentProjectsList.setCellRenderer(new ProjectListRenderer());
 
@@ -84,7 +86,7 @@ public class StartupDialog extends JDialog {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    EditorProject selected = recentProjectsList.getSelectedValue();
+                    Settings.RecentProjectInfo selected = recentProjectsList.getSelectedValue();
                     if (selected != null) {
                         openSelectedProject(selected);
                     }
@@ -99,60 +101,64 @@ public class StartupDialog extends JDialog {
     }
 
     private void createNewProject(ActionEvent e) {
-        NewProjectDialog newProjectDialog = new NewProjectDialog((Frame) getParent(), editorSettings);
-        newProjectDialog.setVisible(true);
+        StartupNewProjectDialog startupNewProjectDialog = new StartupNewProjectDialog((Frame) getParent(), settings);
+        startupNewProjectDialog.setVisible(true);
 
-        if (newProjectDialog.getSelectedFile() != null) {
-            File selectedFile = newProjectDialog.getSelectedFile();
-            selectedProjectPath = selectedFile.getAbsolutePath();
+        StartupNewProjectDialog.NewProjectDialogResult newProjectDialogResult = startupNewProjectDialog.getResult();
+        if (newProjectDialogResult != null) {
+            result = new StartupDialogResult();
+            result.projectFile = newProjectDialogResult.projectFile;
+            result.mapFile = newProjectDialogResult.mapFile;
+            result.createNewProject = true;
 
             // Add to recent projects
-            EditorProject project = new EditorProject();
-            String projectName = selectedFile.getParentFile().getName();
-            project.setName(projectName);
-            project.setDir(selectedFile.getParent());
+            Settings.RecentProjectInfo recentProjectInfo = new Settings.RecentProjectInfo();
+            String projectName = result.projectFile.getParentFile().getName();
+            recentProjectInfo.setName(projectName);
+            recentProjectInfo.setDir(result.projectFile.getParent());
+            settings.addRecentProjectInfo(recentProjectInfo);
 
-            editorSettings.addRecentProject(project);
             saveSettings(); // Save settings after adding new project to recent
             dispose();
         }
     }
 
+    // Open project by selecting it from the file chooser
     private void openProject(ActionEvent e) {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter("Theme Editor Project (*.project)", "project"));
         fileChooser.setDialogTitle("Open Project");
-        fileChooser.setCurrentDirectory(new File(editorSettings.getProjectsDir()));
+//        fileChooser.setCurrentDirectory(new File(settings.getProjectsDir()));
 
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            selectedProjectPath = selectedFile.getAbsolutePath();
+        int fileChooserResult = fileChooser.showOpenDialog(this);
+        if (fileChooserResult == JFileChooser.APPROVE_OPTION) {
+            result = new StartupDialogResult();
+            result.projectFile = fileChooser.getSelectedFile();
 
             // Add to recent projects
-            EditorProject project = new EditorProject();
-            String projectName = selectedFile.getParentFile().getName();
-            project.setName(projectName);
-            project.setDir(selectedFile.getParent());
+            Settings.RecentProjectInfo recentProjectInfo = new Settings.RecentProjectInfo();
+            String projectName = result.projectFile.getParentFile().getName();
+            recentProjectInfo.setName(projectName);
+            recentProjectInfo.setDir(result.projectFile.getParent());
+            settings.addRecentProjectInfo(recentProjectInfo);
 
-            editorSettings.addRecentProject(project);
             saveSettings();
-
             dispose();
         }
     }
 
-    private void openSelectedProject(EditorProject project) {
-        String projectPath = project.getDir() + File.separator + PROJECT_FILE;
+    // Open project after selecting one from the list of recent projects
+    private void openSelectedProject(Settings.RecentProjectInfo project) {
+        String projectPath = project.getDir() + File.separator + PROJECT_FILENAME;
         File projectFile = new File(projectPath);
 
         if (projectFile.exists()) {
-            selectedProjectPath = projectPath;
+            result = new StartupDialogResult();
+            result.projectFile = projectFile;
 
             // Update the project in recent list (bumps it to top)
-            editorSettings.addRecentProject(project);
+            settings.addRecentProjectInfo(project);
             saveSettings();
-
             dispose();
         } else {
             JOptionPane.showMessageDialog(this,
@@ -161,7 +167,7 @@ public class StartupDialog extends JDialog {
                     JOptionPane.ERROR_MESSAGE);
 
             // Remove from recent projects since it doesn't exist
-            editorSettings.getRecentProjects().remove(project);
+            settings.getRecentProjects().remove(project);
             saveSettings();
             refreshProjectsList();
         }
@@ -169,38 +175,38 @@ public class StartupDialog extends JDialog {
 
     private void loadSettings() {
         try {
-            File settingsFile = new File(SETTINGS_FILE);
+            File settingsFile = new File(SETTINGS_FILENAME);
             if (settingsFile.exists()) {
-                editorSettings = EditorSettings.load(settingsFile);
+                settings = Settings.load(settingsFile);
             } else {
-                editorSettings = new EditorSettings();
+                settings = new Settings();
             }
         } catch (Exception e) {
-            editorSettings = new EditorSettings();
             System.err.println("Error loading settings: " + e.getMessage());
+            settings = new Settings();
         }
         refreshProjectsList();
     }
 
     private void saveSettings() {
         try {
-            File settingsFile = new File(SETTINGS_FILE);
-            editorSettings.save(settingsFile);
+            File settingsFile = new File(SETTINGS_FILENAME);
+            settings.save(settingsFile);
         } catch (Exception e) {
             System.err.println("Error saving settings: " + e.getMessage());
         }
     }
 
     private void refreshProjectsList() {
-        listModel.clear();
-        List<EditorProject> recentProjects = editorSettings.getRecentProjects();
-        for (EditorProject project : recentProjects) {
-            listModel.addElement(project);
+        recentProjectListModel.clear();
+        List<Settings.RecentProjectInfo> recentProjects = settings.getRecentProjects();
+        for (Settings.RecentProjectInfo project : recentProjects) {
+            recentProjectListModel.addElement(project);
         }
     }
 
-    public String getSelectedProjectPath() {
-        return selectedProjectPath;
+    public StartupDialogResult getResult() {
+        return result;
     }
 
     private static class ProjectListRenderer extends DefaultListCellRenderer {
@@ -209,7 +215,7 @@ public class StartupDialog extends JDialog {
                                                       boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof EditorProject project) {
+            if (value instanceof Settings.RecentProjectInfo project) {
                 setText("<html><b>"+project.getName() + "</b><br>" + project.getDir() + "</html>");
             }
 

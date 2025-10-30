@@ -1,17 +1,16 @@
-package pl.lanteq.mapsforge.theme.editor.model;
+package kamokr.mapsforge.theme.editor;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.*;
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement(name = "settings")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class EditorSettings {
+public class Settings {
     @XmlAttribute(name = "projects_dir")
     private String projectsDir = System.getProperty("user.home") + File.separator + "MapsforgeThemeEditorProjects";
     public String getProjectsDir() {
@@ -21,14 +20,39 @@ public class EditorSettings {
         this.projectsDir = projectsDir;
     }
 
-    @XmlElement(name = "project")
-    private List<EditorProject> recentProjects = new ArrayList<>();
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RecentProjectInfo {
+        @XmlAttribute(name = "name")
+        private String name;
 
-    public List<EditorProject> getRecentProjects() {
+        @XmlAttribute(name = "dir")
+        private String dir;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDir() {
+            return dir;
+        }
+
+        public void setDir(String dir) {
+            this.dir = dir;
+        }
+    }
+
+    @XmlElement(name = "project")
+    private List<RecentProjectInfo> recentProjects = new ArrayList<>();
+
+    public List<RecentProjectInfo> getRecentProjects() {
         return recentProjects;
     }
 
-    public void addRecentProject(EditorProject project) {
+    public void addRecentProjectInfo(RecentProjectInfo project) {
         // Remove if already exists
         recentProjects.removeIf(p -> p.getDir().equals(project.getDir()) && p.getName().equals(project.getName()));
         // Add to the beginning
@@ -39,20 +63,16 @@ public class EditorSettings {
         }
     }
 
-    public static EditorSettings load(File file) throws Exception {
-        JAXBContext ctx = JAXBContext.newInstance(EditorSettings.class);
+    public static Settings load(File file) throws Exception {
+        JAXBContext ctx = JAXBContext.newInstance(Settings.class);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
-        return (EditorSettings) unmarshaller.unmarshal(file);
+        return (Settings) unmarshaller.unmarshal(file);
     }
 
     public void save(File file) throws Exception {
-        JAXBContext ctx = JAXBContext.newInstance(EditorSettings.class);
+        JAXBContext ctx = JAXBContext.newInstance(Settings.class);
         jakarta.xml.bind.Marshaller marshaller = ctx.createMarshaller();
         marshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         marshaller.marshal(this, file);
     }
 }
-
-
-
-

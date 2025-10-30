@@ -1,42 +1,45 @@
-package pl.lanteq.mapsforge.theme.editor.ui;
-
-import pl.lanteq.mapsforge.theme.editor.model.EditorProject;
-import pl.lanteq.mapsforge.theme.editor.model.EditorSettings;
-import pl.lanteq.mapsforge.theme.editor.model.RenderTheme;
-import pl.lanteq.mapsforge.theme.editor.model.RenderThemeIO;
+package kamokr.mapsforge.theme.editor;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
 
-public class NewProjectDialog extends JDialog {
-    private static final String PROJECT_FILE = "editor.project";
+public class StartupNewProjectDialog extends JDialog {
+    private static final String PROJECT_FILENAME = "editor.project";
 
-    private EditorSettings editorSettings;
+    private Settings settings;
     private JTextField projectNameField;
     private JTextField mapFileField;
+    private JTextField dirField;
     private JButton createButton;
     private JButton cancelButton;
+    private JButton browseDirButton;
     private JButton browseMapButton;
 
-    private String createdProjectPath = null;
+    public class NewProjectDialogResult {
+        public File projectFile = null;
+        public File mapFile = null;
+    }
 
-    public NewProjectDialog(Frame parent, EditorSettings editorSettings) {
+    private NewProjectDialogResult result = null;
+
+    public StartupNewProjectDialog(Frame parent, Settings settings) {
         super(parent, "Create New Project", true);
-        this.editorSettings = editorSettings;
+        this.settings = settings;
         initializeUI();
     }
 
     private void initializeUI() {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setSize(500, 200);
+        setSize(500, 260);
         setLocationRelativeTo(null);
         setResizable(false);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -58,9 +61,28 @@ public class NewProjectDialog extends JDialog {
         projectNameField = new JTextField(20);
         formPanel.add(projectNameField, gbc);
 
-        // Map file
+        // Directory
         gbc.gridx = 0;
         gbc.gridy = 1;
+        gbc.weightx = 0;
+        formPanel.add(new JLabel("Project directory:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        JPanel dirPanel = new JPanel(new BorderLayout(5, 0));
+        dirField = new JTextField();
+        dirField.setEditable(false);
+        dirPanel.add(dirField, BorderLayout.CENTER);
+
+        browseDirButton = new JButton("Browse");
+        browseDirButton.addActionListener(this::browseDir);
+        dirPanel.add(browseDirButton, BorderLayout.EAST);
+
+        formPanel.add(dirPanel, gbc);
+
+        // Map file
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         gbc.weightx = 0;
         formPanel.add(new JLabel("Map File:"), gbc);
 
@@ -102,6 +124,19 @@ public class NewProjectDialog extends JDialog {
         });
 
         updateCreateButton();
+    }
+
+    private void browseDir(ActionEvent e) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Select Map File");
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            dirField.setText(selectedFile.getAbsolutePath());
+            updateCreateButton();
+        }
     }
 
     private void browseMapFile(ActionEvent e) {
@@ -149,7 +184,7 @@ public class NewProjectDialog extends JDialog {
         }
 
         // Create project directory
-        File projectsDir = new File(editorSettings.getProjectsDir());
+        File projectsDir = new File(settings.getProjectsDir());
         File projectDir = new File(projectsDir, projectName);
 
         if (projectDir.exists()) {
@@ -171,61 +206,22 @@ public class NewProjectDialog extends JDialog {
             }
         }
 
-        // Create project file
-        File projectFile = new File(projectDir, PROJECT_FILE);
+        result = new NewProjectDialogResult();
+        result.projectFile = new File(projectDir, PROJECT_FILENAME);
+        result.mapFile = mapFile;
 
-        RenderTheme newTheme = new RenderTheme();
-        newTheme.setMapFilename(mapFile.getAbsolutePath());
-        try {
-            newTheme.saveProject(projectFile);
-            createdProjectPath = projectFile.getAbsolutePath();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error creating project file: " + ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         dispose();
+    }
 
-        // Create EditorProject instance
-//        createdProject = new EditorProject();
-//        createdProject.setName(projectName);
-//        createdProject.setDir(projectDir.getAbsolutePath());
+    /**
+     * Creates a new project with basic theme structure
+     *
+     * @param projectXmlFile The file where the project XML will be saved
+     * @param mapFile The Mapsforge map file to use in editor
+     * @throws IOException If there's an error creating the project files
+     */
+    public static void createEmptyProject(File projectXmlFile, File mapFile) throws IOException {
 
-        // Copy map file to project directory (optional - you might want to keep it in original location)
-//        File projectMapFile = new File(projectDir, mapFile.getName());
-//        try {
-//            // For now, we'll just reference the original map file
-//            // If you want to copy it, you can use Files.copy here
-//            createdProject.setMap(mapFile.getName());
-//        } catch (Exception ex) {
-//            JOptionPane.showMessageDialog(this,
-//                    "Error setting up map file: " + ex.getMessage(),
-//                    "Error",
-//                    JOptionPane.ERROR_MESSAGE);
-//            return;
-//        }
-
-//        try {
-//            editorSettings.save();
-//            createdProjectPath = projectFile.getAbsolutePath();
-//
-//            // Add to recent projects
-//            editorSettings.addRecentProject(createdProject);
-//
-//            JOptionPane.showMessageDialog(this,
-//                    "Project created successfully!",
-//                    "Success",
-//                    JOptionPane.INFORMATION_MESSAGE);
-//
-//            dispose();
-//        } catch (Exception ex) {
-//            JOptionPane.showMessageDialog(this,
-//                    "Error creating project: " + ex.getMessage(),
-//                    "Error",
-//                    JOptionPane.ERROR_MESSAGE);
-//        }
     }
 
     private boolean isValidProjectName(String name) {
@@ -249,10 +245,7 @@ public class NewProjectDialog extends JDialog {
         createButton.setEnabled(enabled);
     }
 
-    public File getSelectedFile() {
-        if(createdProjectPath == null) {
-            return null;
-        }
-        return new File(createdProjectPath);
+    public NewProjectDialogResult getResult() {
+        return result;
     }
 }

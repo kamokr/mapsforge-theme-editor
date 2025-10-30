@@ -1,4 +1,4 @@
-package pl.lanteq.mapsforge.theme.editor.ui;
+package kamokr.mapsforge.theme.editor;
 
 import javax.swing.*;
 
@@ -8,7 +8,7 @@ public class MapDataPanel extends JPanel {
         // create text area to display map data information
         mapDataTextArea = new JTextArea();
         mapDataTextArea.setEditable(false);
-        mapDataTextArea.setText("click on map to see map data information here");
+        mapDataTextArea.setText("click on map to see\nmap data information here");
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(new JScrollPane(mapDataTextArea));

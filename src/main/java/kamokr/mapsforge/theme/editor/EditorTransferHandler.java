@@ -1,8 +1,4 @@
-package pl.lanteq.mapsforge.theme.editor.ui;
-
-import pl.lanteq.mapsforge.theme.editor.model.Instruction;
-import pl.lanteq.mapsforge.theme.editor.model.RenderTheme;
-import pl.lanteq.mapsforge.theme.editor.model.Rule;
+package kamokr.mapsforge.theme.editor;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -13,18 +9,17 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.*;
-import java.util.logging.Logger;
 
-class ThemeTreeTransferHandler extends TransferHandler {
+class EditorTransferHandler extends TransferHandler {
     DataFlavor nodesFlavor;
     DataFlavor[] flavors = new DataFlavor[1];
     DefaultMutableTreeNode[] nodesToRemove;
 
-    public ThemeTreeTransferHandler() {
+    public EditorTransferHandler() {
         try {
             String mimeType = DataFlavor.javaJVMLocalObjectMimeType +
                     ";class=\"" +
-                    javax.swing.tree.DefaultMutableTreeNode[].class.getName() +
+                    DefaultMutableTreeNode[].class.getName() +
                     "\"";
             nodesFlavor = new DataFlavor(mimeType);
             flavors[0] = nodesFlavor;
@@ -33,7 +28,7 @@ class ThemeTreeTransferHandler extends TransferHandler {
         }
     }
 
-    public boolean canImport(TransferHandler.TransferSupport support) {
+    public boolean canImport(TransferSupport support) {
         if (!support.isDrop()) {
             return false;
         }
@@ -89,24 +84,32 @@ class ThemeTreeTransferHandler extends TransferHandler {
     }
 
     private boolean isDropAllowed(Object sourceUserObject, Object targetUserObject) {
-        System.out.println("Checking drop from " +
-                sourceUserObject.getClass().getSimpleName() + " to " +
-                targetUserObject.getClass().getSimpleName());
-        // Instruction can only be dropped on Rule
-        if (sourceUserObject instanceof Instruction) {
-            return targetUserObject instanceof Rule;
+        boolean result = false;
+
+        if(sourceUserObject instanceof Model.ElementBinding source && targetUserObject instanceof Model.ElementBinding target) {
+            String sourceName = source.getName();
+            String targetName = target.getName();
+
+            switch (sourceName) {
+                case "rule":
+                    result = targetName.equals("rule") || targetName.equals("rendertheme");
+                    break;
+
+                case "area", "line", "circle", "caption":
+                    result = targetName.equals("rule");
+                    break;
+
+                case "layer":
+                    result = targetName.equals("stylemenu");
+                    break;
+
+                case "name":
+                    result = targetName.equals("layer");
+                    break;
+            }
         }
 
-        // Rule can only be dropped on Rule or RenderTheme
-        if (sourceUserObject instanceof Rule) {
-            return targetUserObject instanceof Rule || targetUserObject instanceof RenderTheme;
-        }
-
-        // Add other restrictions as needed for other types
-        // For example, if you have other classes with specific drop rules
-
-        // Default: allow drop for other types (or return false if you want to restrict unknown types)
-        return false;
+        return result;
     }
 
     private Object getActualUserObject(DefaultMutableTreeNode node) {
@@ -194,7 +197,7 @@ class ThemeTreeTransferHandler extends TransferHandler {
         return COPY_OR_MOVE;
     }
 
-    public boolean importData(TransferHandler.TransferSupport support) {
+    public boolean importData(TransferSupport support) {
         if (!canImport(support)) {
             return false;
         }
