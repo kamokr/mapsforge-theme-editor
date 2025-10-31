@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -159,11 +160,11 @@ public class MapView extends JPanel implements XmlRenderThemeMenuCallback {
         Tile lowerRight = new Tile(tileXMax, tileYMax, this.mapView.getModel().mapViewPosition.getZoomLevel(), this.mapView.getModel().displayModel.getTileSize());
         MapReadResult mapReadResult = mapDataStore.readMapData(upperLeft, lowerRight);
 
-        StringBuilder sb = new StringBuilder();
+        mapDataPanel.clear();
 
-        // Filter POI
-        sb.append("*** POI ***");
+        mapDataPanel.addEntry("<b>POIS</b><br><br>");
         for (PointOfInterest pointOfInterest : mapReadResult.pois) {
+            StringBuilder sb = new StringBuilder();
             Point layerXY = this.mapView.getMapViewProjection().toPixels(pointOfInterest.position);
             if (!Rotation.noRotation(this.mapView.getMapRotation()) && layerXY != null) {
                 layerXY = this.mapView.getMapRotation().rotate(layerXY, true);
@@ -171,17 +172,17 @@ public class MapView extends JPanel implements XmlRenderThemeMenuCallback {
             if (layerXY.distance(tapXY) > touchRadius) {
                 continue;
             }
-            sb.append("\n");
             List<Tag> tags = pointOfInterest.tags;
-            for (int i = 0, n = tags.size(); i < n; i++) {
-                Tag tag = tags.get(i);
-                sb.append("\n").append(tag.key).append("=").append(tag.value);
+            for (Tag tag : tags) {
+                sb.append(tag.key).append(" = ").append(tag.value).append("<br>");
             }
+            sb.append("<br>");
+            mapDataPanel.addEntry(sb.toString());
         }
 
-        // Filter ways
-        sb.append("\n\n").append("*** WAYS ***");
+        mapDataPanel.addEntry("<b>WAYS</b><br><br>");
         for (Way way : mapReadResult.ways) {
+            StringBuilder sb = new StringBuilder();
             boolean cont = false;
             if(!LatLongUtils.isClosedWay(way.latLongs[0])) {
                 Point nearestPoint = nearestPolygonPoint(way.latLongs, tapLatLong);
@@ -192,16 +193,13 @@ public class MapView extends JPanel implements XmlRenderThemeMenuCallback {
                 continue;
             }
 
-            sb.append("\n");
             List<Tag> tags = way.tags;
-            for (int i = 0, n = tags.size(); i < n; i++) {
-                Tag tag = tags.get(i);
-                sb.append("\n").append(tag.key).append("=").append(tag.value);
+            for (Tag tag : tags) {
+                sb.append(tag.key).append(" = ").append(tag.value).append("<br>");
             }
+            sb.append("<br>");
+            mapDataPanel.addEntry(sb.toString());
         }
-
-        System.out.println(sb.toString());
-        mapDataPanel.setText(sb.toString());
     }
 
     private Point nearestPolygonPoint(LatLong[][] polygons, LatLong point) {
