@@ -1,3 +1,5 @@
+import java.io.FileOutputStream
+
 plugins {
     id("java")
     id("application")
@@ -27,15 +29,21 @@ dependencies {
     implementation("com.github.mapsforge.mapsforge:mapsforge-map:0.26.1")
     implementation("com.github.mapsforge.mapsforge:mapsforge-map-reader:0.26.1")
     implementation("com.github.mapsforge.mapsforge:mapsforge-themes:0.26.1")
-
     implementation("com.github.mapsforge.mapsforge:mapsforge-map-awt:0.26.1")
-    implementation("guru.nidi.com.kitfox:svgSalamander:1.1.3")
-    implementation("net.sf.kxml:kxml2:2.3.0")
-
     implementation("com.github.mapsforge.mapsforge:mapsforge-core:0.26.1")
     implementation("com.github.mapsforge.mapsforge:mapsforge-poi:0.26.1")
-
     implementation("com.github.mapsforge.mapsforge:mapsforge-poi-awt:0.26.1")
+    
+//    implementation("com.github.kamokr.mapsforge:mapsforge-core:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-map:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-map-reader:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-themes:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-map-awt:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-poi:kamokr-SNAPSHOT")
+//    implementation("com.github.kamokr.mapsforge:mapsforge-poi-awt:kamokr-SNAPSHOT")
+
+    implementation("guru.nidi.com.kitfox:svgSalamander:1.1.3")
+    implementation("net.sf.kxml:kxml2:2.3.0")
     implementation("org.xerial:sqlite-jdbc:3.43.0.0")
 
     implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.1")
@@ -76,8 +84,18 @@ tasks.register("listDeps") {
 
 // Task to preprocess XML RenderTheme schema and add editor specific attributes ========================================
 val projectSchemaFile = file("src/main/resources/renderTheme.editor.xsd")
+val schemaFile = file("build/tmp/renderTheme.xsd")
+val schemaFileUrl = "https://raw.githubusercontent.com/kamokr/mapsforge/kamokr/resources/renderTheme.xsd"
+
+tasks.register("downloadOriginalSchema") {
+    uri(schemaFileUrl).toURL().openStream().use {
+        it.copyTo(FileOutputStream(schemaFile))
+    }
+}
+
 tasks.register<XSLTTransformTask>("preprocessSchema") {
-    source = file("renderTheme.xsd") // your original schema
+    dependsOn("downloadOriginalSchema")
+    source = schemaFile
     stylesheet = file("add-editor-attributes.xslt")
     output = projectSchemaFile
 }
