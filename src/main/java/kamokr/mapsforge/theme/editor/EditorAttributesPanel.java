@@ -109,6 +109,8 @@ public class EditorAttributesPanel extends JPanel {
     private JComponent buildInput(Model.AttributeBinding b) {
         String value = b.getValue();
         if(value == null)
+            value = b.meta.defaultValue;
+        if(value == null)
             value = "";
 
         if(!b.meta.enumerations.isEmpty()) {

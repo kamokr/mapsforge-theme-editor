@@ -1,6 +1,7 @@
 package kamokr.mapsforge.theme.editor;
 
 import org.apache.ws.commons.schema.*;
+import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -210,9 +211,9 @@ public class Model {
                             attrMeta.pattern = s.pattern;
                             attrMeta.enumerations.addAll(s.enumerations);
 
-                            // add empty choice to automatically assign default value
-                            if(!attrMeta.required && !attrMeta.enumerations.isEmpty())
-                                attrMeta.enumerations.add(0, "");
+//                            // add empty choice to automatically assign default value
+//                            if(!attrMeta.required && !attrMeta.enumerations.isEmpty())
+//                                attrMeta.enumerations.add(0, "");
                         }
 
                         elementMeta.attributes.put(a.getName(), attrMeta);
@@ -328,6 +329,25 @@ public class Model {
         element.removeAttribute("editor-enabled");
         element.removeAttribute("editor-comment");
         element.removeAttribute("editor-map");
+
+        // remove attributes not present in schema or if they have default values
+        List<Attribute> attrsToRemove = new ArrayList<>();
+        for (Attribute attr : element.getAttributes()) {
+            ElementMeta elementMeta = schema.get(element.getName());
+            if (elementMeta == null) continue;
+
+            // remove attributes not present in schema
+            AttributeMeta attrMeta = elementMeta.attributes.get(attr.getName());
+            if (attrMeta == null) attrsToRemove.add(attr);
+
+            // remove attribute if it is optional and has default value
+            if (attrMeta != null && !attrMeta.required && attrMeta.defaultValue != null) {
+                if (attr.getValue().equals(attrMeta.defaultValue)) {
+                    attrsToRemove.add(attr);
+                }
+            }
+        }
+        for (Attribute attr : attrsToRemove) element.removeAttribute(attr);
 
         // skip saving disabled elements
         List<Element> toRemove = new ArrayList<>();
