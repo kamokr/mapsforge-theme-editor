@@ -8,8 +8,7 @@ plugins {
 
 group = "kamokr"
 version = "0.1"
-val mapsforgeVersion = "0.25.0"
-//val mapsforgeVersion = "0.26.1"
+val mapsforgeVersion = "0.30.0"
 
 repositories {
     mavenCentral()
